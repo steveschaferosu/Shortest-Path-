@@ -1,0 +1,163 @@
+/**
+ * ShortestPath: Displays paths from a start city to a destination city(*Case
+ * Sensitive based on txt file format*). The nodename as well as the path cost
+ * is displayed. The input is from a file with a (nodename1, nodename2, cost)
+ * txt format.
+ * 
+ * 
+ * @author Steve Schafer
+ * @version 04082020
+ */
+public class ShortestPath {
+
+	public static void main(String[] args) {
+		Scanner keyboard = new Scanner(System.in);
+		System.out.print("Enter a filename with paths: ");
+		String input = keyboard.nextLine();
+
+		Map<String, List<Path>> paths = readPaths(input);
+		// Check for no input
+		if (!paths.isEmpty()) {
+			System.out.println();
+			displayAdjacencyList(paths);
+			System.out.println();
+			System.out.print("Enter a start city (empty line to quit): ");
+			String start = keyboard.nextLine();
+			// Checks for incorrectly spelled start city
+			while (!paths.containsKey(start) && !start.equals("")) {
+				System.out.println("Please enter correct city name based on " + input + " file.");
+				System.out.print("Enter a start city (empty line to quit): ");
+				start = keyboard.nextLine();
+			}
+			while (!start.equals("")) {
+				Map<String, Double> shortestPath = findDistances(start, paths);
+				System.out.println();
+				displayShortest(start, shortestPath);
+				System.out.println();
+				System.out.print("Enter a start city (empty line to quit): ");
+				start = keyboard.nextLine();
+				while (!paths.containsKey(start) && !start.equals("")) {
+					System.out.println("Please enter correct city name based on " + input + " file.");
+					System.out.print("Enter a start city (empty line to quit): ");
+					start = keyboard.nextLine();
+				}
+			}
+		}
+		System.out.print("Goodbye!");
+		keyboard.close();
+	}
+
+	// Reads file and returns adjacency list of txt with (nodeName1,nodeName2, dist)
+	// format
+	public static Map<String, List<Path>> readPaths(String fname) {
+		Map<String, List<Path>> adjList = new TreeMap<>();
+		try {
+			File inputFile = new File(fname);
+			Scanner textScanner = new Scanner(inputFile);
+
+			while (textScanner.hasNext()) {
+				String input = textScanner.nextLine();
+				String[] tokens = input.split(",");
+				String nodeName1 = tokens[0];
+				String nodeName2 = tokens[1];
+				Double dist = Double.parseDouble(tokens[2]);
+
+				// Sets the start of the List to the City
+				List<Path> listOne = adjList.get(nodeName1);
+				// New List - null checks for list
+				if (listOne == null) {
+					listOne = new ArrayList<Path>();
+					adjList.put(nodeName1, listOne);
+				}
+				// Creates the path
+				Path pathOne = new Path(nodeName2, dist);
+				listOne.add(pathOne);
+
+				// Sets the start of the List to the City
+				List<Path> listTwo = adjList.get(nodeName2);
+				// New List - null checks for list
+				if (listTwo == null) {
+					listTwo = new ArrayList<Path>();
+					adjList.put(nodeName2, listTwo);
+				}
+				// Creates the path
+				Path pathTwo = new Path(nodeName1, dist);
+				listTwo.add(pathTwo);
+
+			}
+			textScanner.close();
+		} catch (FileNotFoundException e) {
+			System.out.println("Error - cannot open file " + fname);
+		}
+		return adjList;
+	}
+
+	// Displays the adjacency list
+	public static void displayAdjacencyList(Map<String, List<Path>> map) {
+		Set<String> keySet = map.keySet();
+		Iterator<String> iterator = keySet.iterator();
+		System.out.format("%-15s", "Start City");
+		System.out.format("%-20s", "Paths");
+		System.out.println();
+		System.out.println("-------------- ------------------------------");
+
+		while (iterator.hasNext()) {
+			String key = iterator.next();
+			System.out.format("%-15s", key + ":");
+			List<Path> pathList = map.get(key);
+			for (int i = 0; i < pathList.size(); i++) {
+				Path curr = pathList.get(i);
+				System.out.format("%-10s", "(" + curr.getEndpoint() + ":" + curr.getCost() + ") ");
+
+			}
+			System.out.println();
+		}
+	}
+
+	// Finds the shortest distances from the start city to the key city
+	public static Map<String, Double> findDistances(String start, Map<String, List<Path>> adj_list) {
+		Path begin = new Path(start, 0.0);
+		Map<String, Double> shortestDistances = new TreeMap<>();
+		Queue<Path> pathQueue = new PriorityQueue<>();
+		pathQueue.add(begin);
+		while (!pathQueue.isEmpty()) {
+			Path curr = pathQueue.remove();
+			if (!shortestDistances.containsKey(curr.getEndpoint())) {
+				String dest = curr.getEndpoint();
+				Double d = curr.getCost();
+
+				shortestDistances.put(dest, d);
+
+				List<Path> pathList = adj_list.get(dest);
+				for (int i = 0; i < pathList.size(); i++) {
+					// Finds new total cost (current node cost + d)
+					double cost = pathList.get(i).getCost() + d;
+					String nodeName = pathList.get(i).getEndpoint();
+
+					Path nextPath = new Path(nodeName, cost);
+					pathQueue.add(nextPath);
+				}
+			}
+		}
+		return shortestDistances;
+	}
+
+	// Displays the shortest distances in a formatted report
+	public static void displayShortest(String start, Map<String, Double> shortest) {
+		System.out.println("Distances from" + start + " to each city:");
+		System.out.format("%-15s", "Dest. City");
+		System.out.format("%-8s", "Distance");
+		System.out.println();
+		System.out.println("-------------- --------");
+
+		Set<String> keys = shortest.keySet();
+		Iterator<String> iterator = keys.iterator();
+
+		while (iterator.hasNext()) {
+			String curr = iterator.next();
+			System.out.format("%-15s", curr);
+			System.out.format("%8s", Math.round(shortest.get(curr) * 100.00) / (100.00) + "0");
+			System.out.println();
+		}
+	}
+}
