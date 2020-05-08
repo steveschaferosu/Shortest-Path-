@@ -5,6 +5,5 @@ A program that computes the shortest path between two cities.
  * p[R]efix. The output will display the correct calculation of the expression
  * using an ExpressionTree. At any point the user can select Q and end the
  * program .
-  * This Expression Tree class contains a series of methods to perform on a TreeNode and create an ExpressionTree. 
+ * This Expression Tree class contains a series of methods to perform on a TreeNode and create an ExpressionTree. 
  * The methods are: buildTreeFromString,toPostfixString, toInfixString,toPrefixString and evaluate.
- * 
